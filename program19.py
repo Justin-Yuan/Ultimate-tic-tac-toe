@@ -2,11 +2,19 @@ import pycuda.driver as cuda
 import pycuda.autoinit
 from pycuda.compiler import SourceModule
 import time
+from copy import deepcopy
 
 global winScores		#how much we are winning each board by (9 element array) from 0 to 1 (0.5 = tie)
 global prScores			#how much we prioritize each board (9 element array) from 0 to 1 
 global gameStage		#how many moves have passed
 global threshold		#algorithm shift after gameStage > threshold
+
+# positive and negative infinity 
+posinf = 999999
+neginf = -999999
+
+# define weights for different squares when evaluating the utility function 
+weights = []
 
 class square:
 	def __init__(self,ID,val):
@@ -23,9 +31,9 @@ class square:
 def findValidMoves(squares,nextsquare): 
 	vm = []
 	if nextsquare != 9:
-		for i in range(nextsquare*9, nextsquare*10):
+		for i in range(nextsquare*9, nextsquare*9+9): #I changed the bound, plz double check 
 			if squares[i].value == 0: #Square must be empty
-			vm.append(nextsquare*9 + i)
+			vm.append(i)	
 	else:
 		for i in range(81):
 			if squares[i].value == 0: #Square must be empty
@@ -84,9 +92,9 @@ def winScore(board, player):
 
 	if boardWinner(board)==player:
 		return 1;
-	if boardWinner(board)!= 0
+	if boardWinner(board)!= 0:
 		return 0;
-	if isBoardFull(board)
+	if isBoardFull(board):
 		return 0.5;
 
 	#insert algorithm for calculating win score of one small board
@@ -101,6 +109,70 @@ def updateScores(game, player):
 
 	#algorithm for updating prScores 
 	
+####################################################################################
+# minimax + alpha-beta pruninng helper functions 
+
+def alpha_beta(state, depth=6):
+	v = max_value(state, neginf, posinf, depth)
+	return 
+
+def max_value(state, alpha, beta, depth):
+	if terminal(depth):
+		return utility(state)
+	v = neginf
+	for move in successors(state):
+		v = max(v, min_value(result(state, move), alpha, beta, depth-1))
+		if v >= beta:
+			return v 
+		alpha = max(alpha, v)
+	return v
+
+def min_value(state, alpha, beta, depth):
+	if terminal(depth):
+		return utility(state)
+	v = posinf
+	for move in successors(state):
+		v = min(v, max_value(result(state, move), alpha, beta, depth-1))
+		if v <= alpha:
+			return v
+		beta = min(beta, v)
+	return v
+
+def utility(state):
+	# use the weights array to evaluate a score for the winning condition 
+	return ... 
+
+def terminal(depth):
+	# determines the ending condition for the recursion 
+	if depth == 0:
+		return True 
+	else:
+		return False 
+
+
+def result(state, move):
+	# return the new state after trying a testing move
+	stateCopy = deepcopy(state) 
+	stateCopy[move+2] = state[0]	# update the move 
+	# update the next player
+	if state[0] == 1:
+		stateCopy[0] == 2
+	else:
+		stateCopy[0] == 1
+	# update the nextsquare 
+	stateCopy[1] = square(move, state[]).bigSq
+	return stateCopy
+
+
+def successors(state):
+	# return a list of numbers representing all posible moves 
+	squares = []
+	nextsquare = state[1]
+	for i in range(2,83): 
+		squares.append(square(i-2,state[i]))
+	return findValidMoves(squares, nextsquare)
+	
+####################################################################################
 
 def get_move(timeout, data):
 
@@ -110,6 +182,8 @@ def get_move(timeout, data):
 	if gameJustStarted():
 			return 40
 			
+	# put valid moves and nextsqure here 
+
 	if (gameStage < threshold): #algorithm 1 (denial of diagonals)
 
 		PLAYER=data[0]
@@ -133,9 +207,15 @@ def get_move(timeout, data):
 		else: #free move
 			for i in range(2,83): 
 				squares.append(square(i-2,data[i]))
-			validMoves=findValidMoves(squares,nextsquare)
+			vm = findValidMoves(squares,nextsquare)
 
 	else: #algorithm 2 (with deeper searching)
+
+		return alpha-beta(game)
+
+
+
+
 
 
 
