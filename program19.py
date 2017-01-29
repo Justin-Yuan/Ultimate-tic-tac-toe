@@ -1,8 +1,8 @@
 import pycuda.driver as cuda
 import pycuda.autoinit
 from pycuda.compiler import SourceModule
-import time
 from copy import deepcopy
+import time
 
 global winScores		#how much we are winning each board by (9 element array) from 0 to 1 (0.5 = tie)
 global prScores			#how much we prioritize each board (9 element array) from 0 to 1 
@@ -109,38 +109,64 @@ def updateScores(game, player):
 
 	#algorithm for updating prScores 
 	
+
+
+
 ####################################################################################
 # minimax + alpha-beta pruninng helper functions 
 
-def alpha_beta(state, depth=6):
-	v = max_value(state, neginf, posinf, depth)
-	return 
+def alpha_beta(timeout, state, depth=6):
+	timeStart = time.clock()
+	v, nextMove = max_value(timeStart, timeStart+timeout, state, neginf, posinf, depth)
+	return nextMove
 
-def max_value(state, alpha, beta, depth):
+
+def max_value(timeStart, timeEnd, state, alpha, beta, depth):
+	if abs(timeEnd - timeStart) < 0.0001:
+		return -1, -1
 	if terminal(depth):
-		return utility(state)
+		return utility(state), -1
 	v = neginf
 	for move in successors(state):
-		v = max(v, min_value(result(state, move), alpha, beta, depth-1))
+		tempMove = -1
+		temp, tempMove = min_value(time.clock(), timeEnd, result(state, move), alpha, beta, depth-1)[0], move
+		if temp == -1:
+			break
+		if v < temp: 
+			v = temp
+			nextMove = tempMove
+		# v = max(v, temp)
 		if v >= beta:
-			return v 
+			return v, nextMove
 		alpha = max(alpha, v)
-	return v
+	return v, nextMove
 
-def min_value(state, alpha, beta, depth):
+
+def min_value(timeStart, timeEnd, state, alpha, beta, depth):
+	if abs(timeEnd - timeStart) < 0.0001:
+		return -1, -1
 	if terminal(depth):
-		return utility(state)
+		return utility(state), -1
 	v = posinf
 	for move in successors(state):
-		v = min(v, max_value(result(state, move), alpha, beta, depth-1))
+		tempMove = -1
+		temp, tempMove = max_value(time.clock(), timeEnd, result(state, move), alpha, beta, depth-1)[0], move
+		if temp == -1:
+			break
+		if v > temp:
+			v = temp
+			nextMove = tempMove
+		# v = min(v, temp)
 		if v <= alpha:
-			return v
+			return v, nextMove
 		beta = min(beta, v)
-	return v
+	return v, nextMove
+
 
 def utility(state):
 	# use the weights array to evaluate a score for the winning condition 
 	return ... 
+
 
 def terminal(depth):
 	# determines the ending condition for the recursion 
@@ -171,7 +197,7 @@ def successors(state):
 	for i in range(2,83): 
 		squares.append(square(i-2,state[i]))
 	return findValidMoves(squares, nextsquare)
-	
+
 ####################################################################################
 
 def get_move(timeout, data):
@@ -210,8 +236,9 @@ def get_move(timeout, data):
 			vm = findValidMoves(squares,nextsquare)
 
 	else: #algorithm 2 (with deeper searching)
+		return alpha-beta(timeout, state, 6)
 
-		return alpha-beta(game)
+		
 
 
 
