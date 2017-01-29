@@ -1,9 +1,12 @@
 import pycuda.driver as cuda
 import pycuda.autoinit
 from pycuda.compiler import SourceModule
+import time
 
 global winScores		#how much we are winning each board by (9 element array) from 0 to 1 (0.5 = tie)
-global prScores			#how much we want to win each board (9 element array) from 0 to 1 
+global prScores			#how much we prioritize each board (9 element array) from 0 to 1 
+global gameStage		#how many moves have passed
+global threshold		#algorithm shift after gameStage > threshold
 
 class square:
 	def __init__(self,ID,val):
@@ -17,15 +20,20 @@ class square:
 	def _getsmallSq(self):
 		return self.ID%9
 
-def findValidMoves(squares,nextsquare):
+def findValidMoves(squares,nextsquare): 
 	vm = []
-	for i in range(nextsquare*9, nextsquare*10):
-		if squares[i].value == 0: #Square must be empty
-		vm.append(nextsquare*9 + i)
+	if nextsquare != 9:
+		for i in range(nextsquare*9, nextsquare*10):
+			if squares[i].value == 0: #Square must be empty
+			vm.append(nextsquare*9 + i)
+	else:
+		for i in range(81):
+			if squares[i].value == 0: #Square must be empty
+				if isBoardWon(getBigBoard(squares,squares[i].bigSq))==0: #Can't play in a won board
+					if not isBoardFull(getBigBoard(squares,squares[i].bigSq)): #Can't play in a full board
+						vm.append(i)
 	return vm
 
-for i in range(nextsquare*9,nextsquare*10): 
-				squares.append(square(i-2,data[i]))
 
 def boardWinner(squares):
 	#Input: squares = 8 item list of squares 
@@ -73,30 +81,42 @@ def getBigBoard(squares,bigSq):
 	return sq
 
 def winScore(board, player):
+
 	if boardWinner(board)==player:
 		return 1;
 	if boardWinner(board)!= 0
 		return 0;
-	if isBoardFull(board).............
+	if isBoardFull(board)
+		return 0.5;
+
+	#insert algorithm for calculating win score of one small board
+
+
+
 
 def updateScores(game, player):
 	for i in range (0, 8):
 		if winScores[i]!=0 and winScores[i]!=1:
-			winScores[i] = winScore(game[i*9, i*10])
+			winScores[i] = winScore(game[i*9 : i*10])
+
+	#algorithm for updating prScores 
 	
 
 def get_move(timeout, data):
 
-	game = data([2:83]
+	startTime = time.clock()
+	game = data[2:83]
 
-	if (time < changeAlgTime):
+	if gameJustStarted():
+			return 40
+			
+	if (gameStage < threshold): #algorithm 1 (denial of diagonals)
 
 		PLAYER=data[0]
 		nextsquare=data[1]
 
 		#if going first
-		if gameJustStarted():
-			return 40
+		
 
 
 		if nextsquare != 9:
@@ -107,13 +127,15 @@ def get_move(timeout, data):
 			vm = findValidMoves(squares, nextsquare)
 
 
-			#cheesing
 
 
 
-		else:
+		else: #free move
+			for i in range(2,83): 
+				squares.append(square(i-2,data[i]))
+			validMoves=findValidMoves(squares,nextsquare)
 
-	else:
+	else: #algorithm 2 (with deeper searching)
 
 
 
