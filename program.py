@@ -2,6 +2,8 @@ import pycuda.driver as cuda
 import pycuda.autoinit
 from pycuda.compiler import SourceModule
 
+import time 
+
 global winScores		#how much we are winning each board by (9 element array) from 0 to 1 (0.5 = tie)
 global prScores			#how much we want to win each board (9 element array) from 0 to 1 
 
@@ -89,6 +91,7 @@ def get_move(timeout, data):
 
 	game = data([2:83]
 
+
 	if (time < changeAlgTime):
 
 		PLAYER=data[0]
@@ -114,6 +117,7 @@ def get_move(timeout, data):
 		else:
 
 	else:
+
 
 
 
