@@ -276,14 +276,14 @@ def successors(state):
 def get_move(timeout, data):
 
 	startTime = time.clock() 
-	game = data[2:83]
+	game = int(data[2:83])
 
 	#if going first
 	if gameStage == 0:
 		return 37
 
-	PLAYER=data[0]
-	nextsquare=data[1]
+	PLAYER=int(data[0])
+	nextsquare=int(data[1])
 
 	updateScores(game, PLAYER)
 
@@ -315,7 +315,7 @@ def get_move(timeout, data):
 			#getting valid moves
 			squares = []
 			for i in range(nextsquare*9,nextsquare*9+9): 
-				squares.append(square(i,data[i+2]))
+				squares.append(square(i,int(data[i+2])))
 			vm = findValidMoves(squares,nextsquare)
 			for temp in bias:
 				square = nextsquare*9+temp
@@ -339,7 +339,7 @@ def get_move(timeout, data):
 		else: #free move
 			squares = []
 			for i in range(2,83):
-				squares.append(square(i,data[i+2]))
+				squares.append(square(i,int(data[i+2])))
 			vm = findValidMoves(squares,nextsquare)
 			choice = weights.index(max(weights))
 			if (not isBoardWon(game[choice*9:choice*9+9])):
@@ -349,6 +349,9 @@ def get_move(timeout, data):
 
 	else: #algorithm 2 (with deeper searching)
 		gameStage += 1
+		tempdata = []
+		for i in range(83):
+			tempdata.append(int(data[i]))
 		return alpha_beta(timeout, data, 6)
 
 

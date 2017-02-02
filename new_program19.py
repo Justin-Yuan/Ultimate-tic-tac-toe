@@ -1,6 +1,6 @@
-import pycuda.driver as cuda
-import pycuda.autoinit
-from pycuda.compiler import SourceModule
+# import pycuda.driver as cuda
+# import pycuda.autoinit
+# from pycuda.compiler import SourceModule
 import time
 from copy import deepcopy
 
@@ -157,17 +157,17 @@ def updateScores(game, player):
 			winScores[i] = winScore(game[i*9:i*9+9])
 	
 	weights[0] = max(winScores[1]+winScores[2], winScores[3]+winScores[6], winScores[4]+winScores[8])+abs(min(winScores[1]+winScores[2], winScores[3]+winScores[6], winScores[4]+winScores[8]))
-	if weights[1] != 0:
-		weights[1] = max((winScores[0]+winScores[2])/2, (winScores[4]+winScores[7])/2)+abs(min((winScores[0]+winScores[2])/2, (winScores[4]+winScores[7])/2))
+	# if weights[1] != 0:
+	# 	weights[1] = max((winScores[0]+winScores[2])/2, (winScores[4]+winScores[7])/2)+abs(min((winScores[0]+winScores[2])/2, (winScores[4]+winScores[7])/2))
 	weights[2] = max(winScores[1]+winScores[0], winScores[5]+winScores[8], winScores[4]+winScores[8])+abs(min(winScores[1]+winScores[2], winScores[3]+winScores[6], winScores[4]+winScores[8]))
-	if weights[3] != 0:
-		weights[3] = max((winScores[0]+winScores[6])/2, (winScores[4]+winScores[5])/2)+abs(min((winScores[0]+winScores[6])/2, (winScores[4]+winScores[5])/2))
+	# if weights[3] != 0:
+	# 	weights[3] = max((winScores[0]+winScores[6])/2, (winScores[4]+winScores[5])/2)+abs(min((winScores[0]+winScores[6])/2, (winScores[4]+winScores[5])/2))
 	weights[4] = 1
-	if weights[5] != 0:
-		weights[5] = max((winScores[2]+winScores[8])/2, (winScores[4]+winScores[3])/2)+abs(min((winScores[2]+winScores[8])/2, (winScores[4]+winScores[3])/2))
+	# if weights[5] != 0:
+	# 	weights[5] = max((winScores[2]+winScores[8])/2, (winScores[4]+winScores[3])/2)+abs(min((winScores[2]+winScores[8])/2, (winScores[4]+winScores[3])/2))
 	weights[6] = max(winScores[0]+winScores[3], winScores[2]+winScores[4], winScores[7]+winScores[8])+abs(min(winScores[0]+winScores[3], winScores[2]+winScores[4], winScores[7]+winScores[8]))
-	if weights[7] != 0:
-		weights[7] = max((winScores[1]+winScores[4])/2, (winScores[6]+winScores[8])/2)+abs(min((winScores[1]+winScores[4])/2, (winScores[6]+winScores[8])/2))
+	# if weights[7] != 0:
+	# 	weights[7] = max((winScores[1]+winScores[4])/2, (winScores[6]+winScores[8])/2)+abs(min((winScores[1]+winScores[4])/2, (winScores[6]+winScores[8])/2))
 	weights[8] = max(winScores[2]+winScores[5], winScores[0]+winScores[4], winScores[6]+winScores[7])+abs(min(winScores[2]+winScores[5], winScores[0]+winScores[4], winScores[6]+winScores[7]))
 	
 	for j in range (9):
@@ -227,8 +227,18 @@ def min_value(timeStart, timeEnd, state, alpha, beta, depth):
 
 
 def utility(state):
-	# use the weights array to evaluate a score for the winning condition 
-	return ... 
+	# use the weights array to evaluate a score for the winning condition
+	temp_weights = deepcopy(weights)
+	temp_winScores = deepcopy(winScores)
+	updateScores(state, state[1])
+
+	sum = 0
+	for i in range(9):
+		sum += weights[i]*winScores[i]
+	weights = temp_weights
+	winScores = temp_winScores
+
+	return sum
 
 
 def terminal(depth):
@@ -270,7 +280,7 @@ def get_move(timeout, data):
 
 	#if going first
 	if gameStage == 0:
-		return 40
+		return 37
 
 	PLAYER=data[0]
 	nextsquare=data[1]
@@ -278,6 +288,28 @@ def get_move(timeout, data):
 	updateScores(game, PLAYER)
 
 	if (gameStage < threshold): #algorithm 1 (denial of diagonals)
+		gameStage += 1
+
+		#prioritizing board to force opponent onto
+		topLeftNum = numPieces(game[0:9], PLAYER)
+		topRightNum = numPieces(game[18:27], PLAYER)
+		botLeftNum = numPieces(game[54:63], PLAYER)
+		botRightNum = numPieces(game[72:81], PLAYER)
+		top = topLeftNum+topRightNum
+		left = topLeftNum+botLeftNum
+		right = topRightNum+botRightNum
+		bot = botRightNum+botLeftNum
+		num = [top, left, right, bot].sort()
+		bias = []
+		for i in range(4):
+			if num[i] == top:
+				bias.append(1)
+			elif num[i] == bot:
+				bias.append(7)
+			elif num[i] == left:
+				bias.append(3)
+			else:
+				bias.append(5)
 
 		if nextsquare != 9:
 
@@ -285,13 +317,38 @@ def get_move(timeout, data):
 			for i in range(nextsquare*9,nextsquare*9+9): 
 				squares.append(square(i,data[i+2]))
 			vm = findValidMoves(squares,nextsquare)
+			for temp in bias:
+				square = nextsquare*9+temp
+				if square in vm:
+					if !isBoardWon(game[(square%9)*9, (square%9)*9+9]): # square%9 = board on which we want opponent to go
+						return square
+			temp = [topRightNum, topLeftNum, botLeftNum, botRightNum]
+			while (len(temp)>0):
+					choice = min(temp)
+				if chioce == topRightNum and !isBoardWon(game[18:27]):
+					return 2
+				elif choice == topLeftNum and !isBoardWon(game[0:9]):
+					return 0
+				elif choice == botRightNum and !isBoardWon(game[72:81]):
+					return 8
+				elif !isBoardWon(game[54:63])
+					return 6
+				temp.remove(min(temp))
+			return nextsquare*9+4
+
 
 		else: #free move
 			for i in range(2,83):
 				squares.append(square(i,data[i+2]))
 			vm = findValidMoves(squares,nextsquare)
+			choice = weights.index(max(weights))
+			if !isBoardWon(game[choice*9:choice*9+9]):
+				for i in range (4):
+					if !isBoardWon(game[bias[i]*9:bias[i]*9+9]):
+						return bias[i]
 
 	else: #algorithm 2 (with deeper searching)
-		return alpha-beta(timeout, data, 6)
+		gameStage += 1
+		return alpha_beta(timeout, data, 6)
 
 
