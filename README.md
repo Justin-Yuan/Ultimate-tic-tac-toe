@@ -1,2 +1,2 @@
 # Ultimate-tic-tac-toe
-gaming AI for Daisy Hacks 2017
+Ultimate tic-tac-toe AI for Daisy Hacks 2017
